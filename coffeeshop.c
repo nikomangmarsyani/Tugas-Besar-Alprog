@@ -107,7 +107,6 @@ void cetak_nama();
 void header_cetak_bukti_pemesanan();
 void isi_cetak_bukti_pemesanan(int pesanan, int banyak_pesanan, int sub_total, int i);
 void closing_cetak_bukti_pemesanan(int total_biaya, int diskon, int total_bayar);
-void baca_stok_menu();
 void ulang();
 void selesai();
 
@@ -173,11 +172,7 @@ void baca_stok_menu(){
 	fclose(update);
 }
 
-<<<<<<< HEAD
 void update_stok_menu(int pesanan, int banyak_pesanan){
-=======
-update_stok_menu(int pesanan, int banyak_pesanan){
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
     stok_menu[pesanan-1] = stok_menu[pesanan-1] - banyak_pesanan;
     FILE *update = fopen("DataStokMenu.txt", "w");
 	for(int i = 0; i < 78; i++){
@@ -250,7 +245,6 @@ void menu_pegawai(){
     printf("\n\t||                        MENU PEGAWAI                      ||");
     printf("\n\t||==========================================================||");
     printf("\n\t|| Pilihan Menu Pegawai                                     ||");
-<<<<<<< HEAD
     printf("\n\t||  [1] Beralih ke Menu Pemesanan Utama                     ||");
     printf("\n\t||  [2] Lihat Transaksi Toko                                ||");
     printf("\n\t||  [3] Input Stok Menu                                     ||");
@@ -260,16 +254,6 @@ void menu_pegawai(){
     printf("\n\t==============================================================");
     printf("\n\tMasukkan Pilihan Anda : ");
 	while(scanf("%d", &menu)==0 || menu < 0 || menu > 4){
-=======
-    printf("\n\t||  [1] Beralih ke Tampilan Pelanggan                       ||");
-    printf("\n\t||  [2] Lihat Data Pelanggan                                ||");
-    printf("\n\t||  [3] Lihat Transaksi Toko                                ||");
-    printf("\n\t||  [4] Input Stok Menu                                     ||");
-    printf("\n\t||  [5] Lihat Stok Menu                                     ||");
-    printf("\n\t==============================================================");
-    printf("\n\tMasukkan Pilihan Anda : ");
-	while(scanf("%d", &menu)==0 || menu < 1 || menu > 5){
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
         printf("\t--------------------------------------------------------------");
         printf("\n\tAngka yang Anda inputkan salah!");
         printf("\n\tMohon inputkan pilihan yang benar...");
@@ -282,7 +266,6 @@ void menu_pegawai(){
         menu_utama();
     }else if(menu==2){
         data_transaksi();
-<<<<<<< HEAD
     }else if(menu==3){
         input_stok_menu();
     }else if(menu==4){
@@ -292,39 +275,6 @@ void menu_pegawai(){
     }
 }
 
-=======
-    }else if(menu==4){
-        input_stok_menu();
-    }else if(menu==5){
-        lihat_stok_menu();
-    }
-}
-
-void data_pelanggan(){
-    FILE *regis = fopen("DataPelanggan.txt", "r");
-    printf("\n\t==============================================================");
-    printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-    printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                      DATA PELANGGAN                      ||");
-    printf("\n\t==============================================================");
-
-    while (!feof(regis)){
-        struct pelanggan pelanggan01;
-
-        //membaca data member dalam file DataPelanggan.txt
-        fscanf(regis, "%[^#]#%d\n", &pelanggan01.nama_pelanggan, &pelanggan01.pin_pelanggan);
-        fflush(stdin);
-        printf("\n\tNama Pelanggan         : %s", pelanggan01.nama_pelanggan);
-        printf("\n\tKode Pelanggan         : %d", pelanggan01.pin_pelanggan);
-        printf("\n\t--------------------------------------------------------------");
-    }
-    //menutup file DataPelanggan.txt
-    fclose(regis);
-    close();
-    menu_pegawai();
-}
-
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
 void data_transaksi(){
     char buff[255];
     FILE *fptr;
@@ -348,8 +298,6 @@ void data_transaksi(){
 
 void input_stok_menu(){
     FILE *input = fopen("DataStokMenu.txt", "w");
-<<<<<<< HEAD
-=======
     printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
 	printf("\n\t||``````````````````````````````````````````````````````````||");
@@ -391,85 +339,6 @@ void lihat_stok_menu(){
         printf("\n\t--------------------------------------------------------------");
     }
     fclose(file);
-    close();
-    menu_pegawai();
-}
-
-void menu_pelanggan(){
-    int menu;
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
-    printf("\n\t==============================================================");
-    printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-	printf("\n\t||``````````````````````````````````````````````````````````||");
-	printf("\n\t||                      INPUT STOK MENU                     ||");
-	printf("\n\t==============================================================");
-    for(int i = 0; i < 78; i++){
-        printf("\n\tMenu : %s", array_nama_menu[i]);
-        printf("\n\tInput Jumlah Stok : ");
-        while(scanf("%d", &stok_menu[i])==0 || stok_menu[i] < 0){
-            printf("\t--------------------------------------------------------------");
-            printf("\n\tAngka yang Anda inputkan salah!");
-            printf("\n\tMohon inputkan pilihan yang benar...");
-            printf("\n\t--------------------------------------------------------------");
-            printf("\n\tInput Jumlah Stok : ");
-            while((getchar())!='\n');
-        }
-        fprintf(input, "%d#%d\n", i+1, stok_menu[i]);
-        printf("\n\t--------------------------------------------------------------");
-    }
-    fclose(input);
-    close();
-    menu_pegawai();
-}
-
-void lihat_stok_menu(){
-    int index_menu, stok;
-    FILE *file = fopen("DataStokMenu.txt", "r");
-    printf("\n\t==============================================================");
-    printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-    printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                      LIHAT STOK MENU                     ||");
-    printf("\n\t==============================================================");
-
-    for(int i = 0; i < 78; i++){
-        fscanf(file, "%d#%d\n", &index_menu, &stok);
-        fflush(stdin);
-        printf("\n\tNama Menu : %s", array_nama_menu[index_menu]);
-        printf("\n\tStok      : %d", stok);
-        printf("\n\t--------------------------------------------------------------");
-    }
-<<<<<<< HEAD
-    fclose(file);
-=======
-
-	// Perulangan untuk mengecek data member dalam file data.txt
-	while (!feof(regis)){
-		//membaca data member dalam file data.txt
-		fscanf(regis, "%[^#]#%d\n", &pelanggan01.nama_pelanggan, &pelanggan01.pin_pelanggan);
-		fflush(stdin);
-
-		//kondisi untuk mengecek apakah pin yang diinputkan terdaftar pada sistem atau tidak
-		if (pelanggan01.pin_pelanggan == pin){
-			// jika pin member ditemukan maka sistem akan menampilkan data yang sesuai dengan pin yang diinputkan
-			printf("\n\tNama Pelanggan         : %s", pelanggan01.nama_pelanggan);
-			printf("\n\tKode Pelanggan         : %d", pelanggan01.pin_pelanggan);
-			printf("\n\t==============================================================");
-			strcpy(pelanggan_login.nama_pelanggan, pelanggan01.nama_pelanggan);
-			fclose(regis); //menutup file DataPelanggan.txt
-			close();
-			header_cetak_bukti_pemesanan();
-            header_cetak_bukti_transaksi();
-			menu_cafe();
-			break;
-		}
-	}
-	fclose(regis); //menutup file DataPelanggan.txt
-    //Jika pin member yang dimasukkan tidak ditemukan pada akun, sistem akan mengulang kembali ke fungsi menu_pelanggan()
-    printf("\n\t==============================================================");
-    printf("\n\t||                Pelanggan Belum Terdaftar                 ||");
-    printf("\n\t||           Silahkan registrasi terlebih dahulu            ||");
-    printf("\n\t==============================================================");
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
     close();
     menu_pegawai();
 }
@@ -744,11 +613,7 @@ void pemesanan(int batas_bawah, int batas_atas, int jenis_menu){
 	printf("\n\t==============================================================");
 	waktu_pemesanan();
 
-<<<<<<< HEAD
 	printf("\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
-=======
-	printf("\n\tJenis Menu         : %s", array_jenis_menu[jenis_menu]);
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
 	isi_cetak_jenis_menu(jenis_menu);
 	isi_cetak_jenis_menu_transaksi(jenis_menu);
 	do{
@@ -841,11 +706,7 @@ void pemesanan(int batas_bawah, int batas_atas, int jenis_menu){
         printf("\n\t==============================================================");
         ulang();
     }else if(pilihan == 3){
-<<<<<<< HEAD
         menu_utama();
-=======
-        menu_cafe();
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
     }
 }
 
@@ -856,10 +717,6 @@ void header_cetak_bukti_pemesanan(){
 	fprintf(insert,"\n\t||``````````````````````````````````````````````````````````||");
 	fprintf(insert,"\n\t||                      BUKTI PEMESANAN                     ||");
 	fprintf(insert,"\n\t==============================================================");
-<<<<<<< HEAD
-=======
-	fprintf(insert,"\n\tNama Pelanggan    : %s", pelanggan_login.nama_pelanggan);
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
 	fprintf(insert,"\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
 	fprintf(insert,"\n\t--------------------------------------------------------------");
 	fclose(insert);
@@ -869,11 +726,7 @@ void header_cetak_bukti_pemesanan(){
 void isi_cetak_jenis_menu(int jenis_menu){
     FILE *insert = fopen("DataPesanan.txt", "a");
     fprintf(insert,"\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
-<<<<<<< HEAD
     fprintf(insert,"\n\t==============================================================");
-=======
-    fprintf(insert,"\n\t--------------------------------------------------------------");
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
     fclose(insert);
 }
 
@@ -904,10 +757,6 @@ void header_cetak_bukti_transaksi(){
 	fprintf(insert,"\n\t||``````````````````````````````````````````````````````````||");
 	fprintf(insert,"\n\t||                      BUKTI TRANSAKSI                     ||");
 	fprintf(insert,"\n\t==============================================================");
-<<<<<<< HEAD
-=======
-	fprintf(insert,"\n\tNama Pelanggan    : %s", pelanggan_login.nama_pelanggan);
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
 	fprintf(insert,"\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
 	fprintf(insert,"\n\t==============================================================");
 	fclose(insert);
@@ -966,16 +815,12 @@ void ulang(){
 	close();
 	switch(menu){
     case 1 :
-<<<<<<< HEAD
         i = 0;
         total_biaya = 0;
 		total_bayar = 0;
         header_cetak_bukti_pemesanan();
         header_cetak_bukti_transaksi();
         menu_utama();
-=======
-        menu_cafe();
->>>>>>> dc95c7f33b91a6b879b4b026e5f2fc357919d340
         break;
     case 0 :
         selesai();
