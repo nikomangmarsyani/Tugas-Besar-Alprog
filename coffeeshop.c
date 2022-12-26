@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-char array_nama_menu[78][50] = {
+char array_nama_menu[78][80] = {
     // menu coffee
     "Ristretto", "Americano", "Blackcoffee", "Cappuccino", "Espresso", "Flat White", "Mochaccino", "Vanilla Latte", "Affogato", "Brewed Coffee", "Macchiato", "Cafe au Lait", "Coffee Latte", "Piccolo Latte", "Caramel Latte", "Hazelnut Latte",
     // menu_frappe
@@ -24,6 +24,8 @@ char array_nama_menu[78][50] = {
     // menu Smoothie  dan Dessert
     "Bamassant (Banana Mango Smoothie dan Croissant)", "Mixedcrust (Mixed Berry Smoothie dan Shortcrust)", "Gualava (Guava Mango Smoothie dan Lava Cake)", "Banberrylee (Banana Strawberry Smoothie dan Creme Brulee)", "Blackmisu (Mango Blackberry Smoothie dan Tiramisu)"
 };
+
+char array_jenis_menu[6][25] = {"Coffee Menu", "Frappe Menu", "Non-Coffee Menu", "Smoothie Menu", "Dessert Menu", "Paket Menu"};
 
 int array_harga_menu[78] = {
     // menu coffee
@@ -53,6 +55,15 @@ float besar_diskon[3] = {
     0.05    // diskon jika belanja > 250000
 };
 
+// Variabel untuk fungsi pemesanan :
+int pesanan[50], banyak_pesanan[50], pilihan, i = 0, sub_total[50], total_biaya = 0, total_bayar = 0, diskon;
+
+// Variabel untuk fungsi baca stok menu :
+int kode_menu[78], stok_awal[78];
+
+// Variabel untuk fungsi update stok menu :
+int stok_menu[78];
+
 struct pegawai{
 	char nama_pegawai[50];
 	int pin_pegawai;
@@ -68,14 +79,6 @@ struct pegawai pegawai02 = {
 
 struct pegawai pegawai_yang_bertugas;
 
-struct pelanggan{
-	char nama_pelanggan[50];
-	int pin_pelanggan;
-};
-
-struct pelanggan pelanggan_baru;
-struct pelanggan pelanggan_login;
-
 time_t waktuserver;
 
 void main();
@@ -83,13 +86,14 @@ void opening();
 void waktu_pemesanan();
 void waktu_pembayaran();
 void close();
+void baca_stok_menu();
+void update_stok_menu(int pesanan, int banyak_pesanan);
+void input_stok_menu();
+void lihat_stok_menu();
 void login_pegawai();
 void menu_pegawai();
 void data_transaksi();
-void menu_pelanggan();
-void registrasi_pelanggan();
-void login_pelanggan();
-void menu_cafe();
+void menu_utama();
 void menu_minuman();
 void menu_coffee();
 void menu_frappe();
@@ -97,8 +101,8 @@ void menu_non_coffee();
 void menu_smoothie();
 void menu_dessert();
 void menu_paket();
-void opsi_program();
-void pemesanan();
+void opsi_program(int batas_bawah, int batas_atas, int jenis_menu);
+void pemesanan(int batas_bawah, int batas_atas, int jenis_menu);
 void cetak_nama();
 void header_cetak_bukti_pemesanan();
 void isi_cetak_bukti_pemesanan(int pesanan, int banyak_pesanan, int sub_total, int i);
@@ -138,16 +142,43 @@ void main(){
 void waktu_pemesanan(){
 	time(&waktuserver);
 	struct tm* waktu = localtime(&waktuserver);
-	printf ("\n\tWaktu Server : %s", asctime (waktu));
+	printf ("\n\tWaktu Server      : %s", asctime (waktu));
 }
 
-void waktu_pembayaran(){
+void waktu_pembayaran_pemesanan(){
 	time(&waktuserver);
 	struct tm* waktu = localtime(&waktuserver);
 	FILE *hasil;
 	hasil = fopen("DataPesanan.txt", "a");
-	fprintf (hasil, "\n\tWaktu Pemesanan : %s", asctime (waktu));
+	fprintf (hasil, "\n\tWaktu Pemesanan   : %s", asctime (waktu));
 	fclose(hasil);
+}
+
+void waktu_pembayaran_transaksi(){
+	time(&waktuserver);
+	struct tm* waktu = localtime(&waktuserver);
+	FILE *hasil;
+	hasil = fopen("DataTransaksi.txt", "a");
+	fprintf (hasil, "\n\tWaktu Pemesanan   : %s", asctime (waktu));
+	fclose(hasil);
+}
+
+void baca_stok_menu(){
+	FILE *update = fopen("DataStokMenu.txt", "r");
+	for(int i = 0; i < 78; i++){
+		fscanf(update, "%[^#]#%d\n", &kode_menu[i], &stok_awal[i]);
+        stok_menu[i] = stok_awal[i];
+	}
+	fclose(update);
+}
+
+void update_stok_menu(int pesanan, int banyak_pesanan){
+    stok_menu[pesanan-1] = stok_menu[pesanan-1] - banyak_pesanan;
+    FILE *update = fopen("DataStokMenu.txt", "w");
+	for(int i = 0; i < 78; i++){
+		fprintf(update, "%d#%d\n", i+1, stok_menu[i]);
+	}
+	fclose(update);
 }
 
 void close(){
@@ -155,7 +186,7 @@ void close(){
     printf("\n\tBerikutnya...");
     printf("\n\tTekan Enter untuk Melanjutkan...");
     getchar();
-    system("clear");
+    system("cls");
 }
 
 void login_pegawai(){
@@ -166,11 +197,11 @@ void login_pegawai(){
 	printf("\n\t||                      MENU PEGAWAI                        ||");
 	printf("\n\t||              SILAKAN LOGIN TERLEBIH DAHULU               ||");
 	printf("\n\t==============================================================");
-	printf("\n\tMasukkan Pin Pegawai : ");
+	printf("\n\tMasukkan Kode Pegawai : ");
 	while(scanf("%d", &pin)==0){
         printf("\t--------------------------------------------------------------");
-        printf("\n\tAngka yang Anda inputkan salah!");
-        printf("\n\tMohon inputkan pilihan yang benar...");
+        printf("\n\tKode yang Anda inputkan salah!");
+        printf("\n\tMohon inputkan kode yang benar...");
         printf("\n\t--------------------------------------------------------------");
         printf("\n\tMasukkan Kode Pegawai : ");
         while((getchar())!='\n');
@@ -182,6 +213,8 @@ void login_pegawai(){
         printf("\n\t||                     BERHASIL LOGIN                       ||");
         printf("\n\t==============================================================");
         strcpy(pegawai_yang_bertugas.nama_pegawai, pegawai01.nama_pegawai);
+        header_cetak_bukti_pemesanan();
+        header_cetak_bukti_transaksi();
         close();
         menu_pegawai();
 	}else if(pin == pegawai02.pin_pegawai){
@@ -190,6 +223,8 @@ void login_pegawai(){
         printf("\n\t||                     BERHASIL LOGIN                       ||");
         printf("\n\t==============================================================");
         strcpy(pegawai_yang_bertugas.nama_pegawai, pegawai02.nama_pegawai);
+        header_cetak_bukti_pemesanan();
+        header_cetak_bukti_transaksi();
         close();
         menu_pegawai();
 	}else{
@@ -210,12 +245,15 @@ void menu_pegawai(){
     printf("\n\t||                        MENU PEGAWAI                      ||");
     printf("\n\t||==========================================================||");
     printf("\n\t|| Pilihan Menu Pegawai                                     ||");
-    printf("\n\t||  [1] Beralih ke Tampilan Pelanggan                       ||");
-    printf("\n\t||  [2] Lihat Data Pelanggan                                ||");
-    printf("\n\t||  [3] Lihat Transaksi Toko                                ||");
+    printf("\n\t||  [1] Beralih ke Menu Pemesanan Utama                     ||");
+    printf("\n\t||  [2] Lihat Transaksi Toko                                ||");
+    printf("\n\t||  [3] Input Stok Menu                                     ||");
+    printf("\n\t||  [4] Lihat Stok Menu                                     ||");
+    printf("\n\t==============================================================");
+    printf("\n\t||  [0] Keluar Program                                      ||");
     printf("\n\t==============================================================");
     printf("\n\tMasukkan Pilihan Anda : ");
-	while(scanf("%d", &menu)==0 || menu < 1 || menu > 3){
+	while(scanf("%d", &menu)==0 || menu < 0 || menu > 4){
         printf("\t--------------------------------------------------------------");
         printf("\n\tAngka yang Anda inputkan salah!");
         printf("\n\tMohon inputkan pilihan yang benar...");
@@ -225,38 +263,16 @@ void menu_pegawai(){
     }
 	close();
     if (menu==1){
-        menu_pelanggan();
+        menu_utama();
     }else if(menu==2){
-        data_pelanggan();
-    }else if(menu==3){
         data_transaksi();
+    }else if(menu==3){
+        input_stok_menu();
+    }else if(menu==4){
+        lihat_stok_menu();
+    }else if(menu==0){
+        selesai();
     }
-}
-
-void data_pelanggan(){
-    FILE *regis = fopen("DataPelanggan.txt", "r");
-    printf("\n\t==============================================================");
-    printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-    printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                      DATA PELANGGAN                      ||");
-    printf("\n\t==============================================================");
-
-    while (!feof(regis)){
-        struct pelanggan pelanggan01;
-
-        //membaca data member dalam file DataPelanggan.txt
-        fscanf(regis, "%[^#]#%d\n", &pelanggan01.nama_pelanggan, &pelanggan01.pin_pelanggan);
-        fflush(stdin);
-        printf("\n\tNama Pelanggan         : %s", pelanggan01.nama_pelanggan);
-        printf("\n\tKode Pelanggan         : %d", pelanggan01.pin_pelanggan);
-        printf("\n\t--------------------------------------------------------------");
-    int c;
-        while((c=getchar())!='\n' && c!=EOF);
-    }
-    //menutup file DataPelanggan.txt
-    fclose(regis);
-    close();
-    menu_pegawai();
 }
 
 void data_transaksi(){
@@ -267,7 +283,7 @@ void data_transaksi(){
     printf("\n\t||``````````````````````````````````````````````````````````||");
     printf("\n\t||                      DATA TRANSAKSI                      ||");
     printf("\n\t==============================================================\n");
-    if ((fptr = fopen("DataPesanan.txt","r")) == NULL){
+    if ((fptr = fopen("DataTransaksi.txt","r")) == NULL){
         printf("\n\tError: File tidak ada!");
     }
 
@@ -280,149 +296,68 @@ void data_transaksi(){
     menu_pegawai();
 }
 
-void menu_pelanggan(){
-    int menu;
+void input_stok_menu(){
+    FILE *input = fopen("DataStokMenu.txt", "w");
     printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-    printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                       MENU PELANGGAN                     ||");
-    printf("\n\t||==========================================================||");
-    printf("\n\t|| Pilihan Menu Pelanggan                                   ||");
-    printf("\n\t||  [1] Registrasi Pelanggan                                ||");
-    printf("\n\t||  [2] Login Pelanggan                                     ||");
-    printf("\n\t==============================================================");
-    printf("\n\tMasukkan Pilihan Anda : ");
-	while(scanf("%d", &menu)==0 || menu < 1 || menu > 2){
-        printf("\t--------------------------------------------------------------");
-        printf("\n\tAngka yang Anda inputkan salah!");
-        printf("\n\tMohon inputkan pilihan yang benar...");
-        printf("\n\t--------------------------------------------------------------");
-        printf("\n\tInputkan pilihan Anda: ");
-        while((getchar())!='\n');
-    }
-	close();
-    if (menu==1){
-        registrasi_pelanggan();
-    }else if(menu==2){
-        login_pelanggan();
-    }
-}
-
-void registrasi_pelanggan(){
-    int i;
-    struct pelanggan pelanggan01;
-	FILE *regis = fopen("DataPelanggan.txt", "a+");
-
+	printf("\n\t||``````````````````````````````````````````````````````````||");
+	printf("\n\t||                      INPUT STOK MENU                     ||");
 	printf("\n\t==============================================================");
-    printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-    printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                   REGISTRASI PELANGGAN                   ||");
-    printf("\n\t==============================================================");
-	printf("\n\tMasukkan Kode Pelanggan : ");
-	while(scanf("%d", &pelanggan_baru.pin_pelanggan)==0 || pelanggan_baru.pin_pelanggan < 0){
-        printf("\t--------------------------------------------------------------");
-        printf("\n\tAngka yang Anda inputkan salah!");
-        printf("\n\tMohon inputkan pilihan yang benar...");
+    for(int i = 0; i < 78; i++){
+        printf("\n\tMenu : %s", array_nama_menu[i]);
+        printf("\n\tInput Jumlah Stok : ");
+        while(scanf("%d", &stok_menu[i])==0 || stok_menu[i] < 0){
+            printf("\t--------------------------------------------------------------");
+            printf("\n\tAngka yang Anda inputkan salah!");
+            printf("\n\tMohon inputkan pilihan yang benar...");
+            printf("\n\t--------------------------------------------------------------");
+            printf("\n\tInput Jumlah Stok : ");
+            while((getchar())!='\n');
+        }
+        fprintf(input, "%d#%d\n", i+1, stok_menu[i]);
         printf("\n\t--------------------------------------------------------------");
-        printf("\n\tMasukkan Kode Pelanggan : ");
-        while((getchar())!='\n');
     }
-	fflush(stdin);
-
-	//Perulangan untuk mengecek data member dalam file DataPelanggan.txt
-	while (!feof(regis)){
-		//membaca data member dalam file DataPelanggan.txt
-		fscanf(regis, "%[^#]#%d\n", &pelanggan01.nama_pelanggan, &pelanggan01.pin_pelanggan);
-		fflush(stdin);
-
-		//kondisi untuk mengecek apakah kode yang diinputkan sudah terdaftar atau belum, jika sudah terdaftar maka sistem akan meminta user untuk mengulang memasukan kode
-		if (pelanggan01.pin_pelanggan == pelanggan_baru.pin_pelanggan){
-            printf("\n\t==============================================================");
-            printf("\n\t||            Kode Sudah Digunakan. Coba Lainnya            ||");
-            printf("\n\t==============================================================");
-            fclose(regis);
-			close();
-			registrasi_pelanggan();
-			break;
-		}
-	}
-    fflush(stdin);
-    printf("\n\tMasukkan Nama     : ");
-    scanf("%[^\n]", pelanggan_baru.nama_pelanggan);
-    fprintf(regis, "%s#%d\n", pelanggan_baru.nama_pelanggan, pelanggan_baru.pin_pelanggan);
-    fclose(regis);
-
-    printf("\n\tPelanggan %s telah didaftarkan\n", pelanggan_baru.nama_pelanggan);
-    printf("\n\t==============================================================");
-    printf("\n\t||            Pelanggan Baru Berhasil Terdaftar             ||");
-    printf("\n\t==============================================================");
+    fclose(input);
     close();
-    menu_pelanggan();
+    menu_pegawai();
 }
 
-void login_pelanggan(){
-	int i;
-	int pin;
-	struct pelanggan pelanggan01;
-	FILE *regis = fopen("DataPelanggan.txt", "a+");
-
-	printf("\n\t==============================================================");
+void lihat_stok_menu(){
+    int index_menu, stok;
+    FILE *file = fopen("DataStokMenu.txt", "r");
+    printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
     printf("\n\t||``````````````````````````````````````````````````````````||");
-    printf("\n\t||                      LOGIN PELANGGAN                     ||");
+    printf("\n\t||                      LIHAT STOK MENU                     ||");
     printf("\n\t==============================================================");
-	printf("\n\tMasukkan Kode Pelanggan : ");
-	while(scanf("%d", &pin)==0 || pin < 0){
-        printf("\t--------------------------------------------------------------");
-        printf("\n\tAngka yang Anda inputkan salah!");
-        printf("\n\tMohon inputkan pilihan yang benar...");
+
+    for(int i = 0; i < 78; i++){
+        fscanf(file, "%d#%d\n", &index_menu, &stok);
+        fflush(stdin);
+        printf("\n\tNama Menu : %s", array_nama_menu[index_menu]);
+        printf("\n\tStok      : %d", stok);
         printf("\n\t--------------------------------------------------------------");
-        printf("\n\tMasukkan Kode Pelanggan : ");
-        while((getchar())!='\n');
     }
-
-	// Perulangan untuk mengecek data member dalam file data.txt
-	while (!feof(regis)){
-		//membaca data member dalam file data.txt
-		fscanf(regis, "%[^#]#%d\n", &pelanggan01.nama_pelanggan, &pelanggan01.pin_pelanggan);
-		fflush(stdin);
-
-		//kondisi untuk mengecek apakah pin yang diinputkan terdaftar pada sistem atau tidak
-		if (pelanggan01.pin_pelanggan == pin){
-			// jika pin member ditemukan maka sistem akan menampilkan data yang sesuai dengan pin yang diinputkan
-			printf("\n\tNama Pelanggan         : %s", pelanggan01.nama_pelanggan);
-			printf("\n\tKode Pelanggan         : %d", pelanggan01.pin_pelanggan);
-			printf("\n\t==============================================================");
-			strcpy(pelanggan_login.nama_pelanggan, pelanggan01.nama_pelanggan);
-			fclose(regis); //menutup file DataPelanggan.txt
-			close();
-			menu_cafe();
-			break;
-		}
-	}
-	fclose(regis); //menutup file DataPelanggan.txt
-    //Jika pin member yang dimasukkan tidak ditemukan pada akun, sistem akan mengulang kembali ke fungsi menu_pelanggan()
-    printf("\n\t==============================================================");
-    printf("\n\t||                Pelanggan Belum Terdaftar                 ||");
-    printf("\n\t||           Silahkan registrasi terlebih dahulu            ||");
-    printf("\n\t==============================================================");
+    fclose(file);
     close();
-    menu_pelanggan();
+    menu_pegawai();
 }
 
-void menu_cafe(){
+void menu_utama(){
     int menu;
     printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
 	printf("\n\t||``````````````````````````````````````````````````````````||");
-	printf("\n\t||           SILAHKAN PILIH MENU YANG AKAN DIBUKA           ||");
+	printf("\n\t||            SILAKAN PILIH MENU YANG AKAN DIBUKA           ||");
 	printf("\n\t||==========================================================||");
     printf("\n\t|| [1] Minuman                                              ||");
     printf("\n\t|| [2] Dessert                                              ||");
     printf("\n\t|| [3] Paket                                                ||");
     printf("\n\t==============================================================");
+    printf("\n\t|| [0] Kembali ke Menu Pegawai                              ||");
+    printf("\n\t==============================================================");
     printf("\n\tMasukkan angka untuk memilih: ");
-  	while (scanf("%d", &menu)==0 || menu < 1 || menu > 3){
+  	while (scanf("%d", &menu)==0 || menu < 0 || menu > 3){
 		printf("\t--------------------------------------------------------------");
         printf("\n\tKarakter yang Anda inputkan salah!");
         printf("\n\tMohon inputkan angka yang benar.");
@@ -430,6 +365,7 @@ void menu_cafe(){
 		printf("\n\tMasukkan angka untuk memilih: ");
 		while((getchar())!='\n');
 	}
+	baca_stok_menu();
 	close();
   	if(menu==1){
 		menu_minuman();
@@ -437,6 +373,8 @@ void menu_cafe(){
         menu_dessert();
     }else if(menu==3){
 		menu_paket();
+	}else if(menu==0){
+		menu_pegawai();
 	}
 }
 
@@ -452,7 +390,7 @@ void menu_minuman(){
     printf("\n\t|| [3] Non Coffee                                           ||");
     printf("\n\t|| [4] Smoothie                                             ||");
     printf("\n\t||==========================================================||");
-    printf("\n\t|| [0] Kembali ke menu utama                                ||");
+    printf("\n\t|| [0] Kembali ke Menu Utama                                ||");
     printf("\n\t==============================================================");
     printf("\n\tMasukkan angka untuk memilih: ");
   	while (scanf("%d", &minuman)==0 || minuman < 0 || minuman > 4){
@@ -473,7 +411,7 @@ void menu_minuman(){
     }else if(minuman==4){
 		menu_smoothie();
 	}else if(minuman==0){
-        menu_cafe();
+        menu_utama();
     }
 }
 
@@ -502,7 +440,7 @@ void menu_coffee(){
     printf("\n\t|| [15] Caramel Latte             ||        Rp 32000        ||");
     printf("\n\t|| [16] Hazelnut Latte            ||        Rp 32000        ||");
     printf("\n\t==============================================================");
-    opsi_program();
+    opsi_program(1, 16, 0);
 }
 
 void menu_frappe(){
@@ -522,7 +460,7 @@ void menu_frappe(){
     printf("\n\t|| [23] Matcha Frappe             ||        Rp 28000        ||");
     printf("\n\t|| [24] Thai Milk Tea Frappe      ||        Rp 28000        ||");
     printf("\n\t==============================================================");
-    opsi_program();
+    opsi_program(17, 24, 1);
 }
 
 void menu_non_coffee(){
@@ -541,7 +479,7 @@ void menu_non_coffee(){
     printf("\n\t|| [30] Peach Mango Lemonade              ||        Rp 25000        ||");
     printf("\n\t|| [31] Coconut Strawberry Lemonade       ||        Rp 25000        ||");
     printf("\n\t======================================================================");
-    opsi_program();
+    opsi_program(25, 31, 2);
 }
 
 void menu_smoothie(){
@@ -563,7 +501,7 @@ void menu_smoothie(){
     printf("\n\t|| [40] Mango Blackberry Smoothie         ||        Rp 25000        ||");
     printf("\n\t|| [41] Mixed Berry Smoothie              ||        Rp 26000        ||");
     printf("\n\t======================================================================");
-    opsi_program();
+    opsi_program(32, 41, 3);
 }
 
 void menu_dessert(){
@@ -587,7 +525,7 @@ void menu_dessert(){
     printf("\n\t|| [52] Cheesecake                ||        Rp 30000        ||");
     printf("\n\t|| [53] Tiramisu                  ||        Rp 30000        ||");
     printf("\n\t==============================================================");
-    opsi_program();
+    opsi_program(42, 53, 4);
 }
 
 void menu_paket(){
@@ -598,7 +536,7 @@ void menu_paket(){
     printf("\n\t||==============================================================================================||");
     printf("\n\t||                    [Kode Menu] Nama Menu                           ||          Harga         ||");
     printf("\n\t||==============================================================================================||");
-    printf("\n\t||                      Coffee dan Dessert                            ||          Harga         ||");
+    printf("\n\t||                                   Coffee dan Dessert                                         ||");
     printf("\n\t||==============================================================================================||");
     printf("\n\t|| [54] Cofferoon     (Coffee Latte dan Macaroon)                     ||        Rp 35000        ||");
     printf("\n\t|| [55] Macchisant    (Macchiato dan Croissant)                       ||        Rp 40000        ||");
@@ -635,15 +573,15 @@ void menu_paket(){
     printf("\n\t|| [77] Banberrylee   (Banana Strawberry Smoothie dan Creme Brulee)   ||        Rp 44000        ||");
     printf("\n\t|| [78] Blackmisu     (Mango Blackberry Smoothie dan Tiramisu)        ||        Rp 50000        ||");
     printf("\n\t==================================================================================================");
-    opsi_program();
+    opsi_program(54, 78, 5);
 }
 
-void opsi_program(){
+void opsi_program(int batas_bawah, int batas_atas, int jenis_menu){
     int pilihan;
     printf("\n\t==============================================================");
     printf("\n\t|| Pilihan Program :                                        ||");
     printf("\n\t||----------------------------------------------------------||");
-    printf("\n\t|| [0] Kembali ke menu utama                                ||");
+    printf("\n\t|| [0] Kembali ke Menu Utama                                ||");
     printf("\n\t|| [1] Pemesanan                                            ||");
     printf("\n\t==============================================================");
     printf("\n\tMasukkan angka untuk memilih: ");
@@ -659,47 +597,60 @@ void opsi_program(){
 	switch(pilihan){
     case 0 :
         close();
-        menu_cafe();
+        menu_utama();
         break;
     case 1 :
-        pemesanan();
+        pemesanan(batas_bawah, batas_atas, jenis_menu);
         break;
 	}
 }
 
-void pemesanan(){
-    int pesanan[50], banyak_pesanan[50], pilihan, i = 0, sub_total[50], total_biaya = 0, total_bayar = 0, diskon;
+void pemesanan(int batas_bawah, int batas_atas, int jenis_menu){
     printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
 	printf("\n\t||``````````````````````````````````````````````````````````||");
 	printf("\n\t||                         PEMESANAN                        ||");
 	printf("\n\t==============================================================");
 	waktu_pemesanan();
-	header_cetak_bukti_pemesanan();
+
+	printf("\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
+	isi_cetak_jenis_menu(jenis_menu);
+	isi_cetak_jenis_menu_transaksi(jenis_menu);
 	do{
+        mengulang:
         fflush(stdin);
         printf("\n\tMasukkan Kode Pesanan: ");
-            while (scanf("%d", &pesanan[i])==0 || pesanan[i] < 0 || pesanan[i] > 78){
+        while (scanf("%d", &pesanan[i])==0 || pesanan[i] < batas_bawah || pesanan[i] > batas_atas){
             printf("\t--------------------------------------------------------------");
             printf("\n\tMohon inputkan angka yang benar.");
-            printf("\n\t       [Angka 1 - 78]");
+            printf("\n\t       [Angka %d - %d]", batas_bawah, batas_atas);
             printf("\n\t--------------------------------------------------------------");
             printf("\n\tMasukkan Kode Pesanan: ");
             while((getchar())!='\n');
         }
         fflush(stdin);
         printf("\n\tMasukkan Banyak Pesanan: ");
-        while (scanf("%d", &banyak_pesanan[i])==0 || banyak_pesanan[i] < 0){
-            printf("\t--------------------------------------------------------------");
-            printf("\n\tKarakter yang Anda inputkan salah!");
-            printf("\n\tMohon inputkan angka yang benar.");
-            printf("\n\t--------------------------------------------------------------");
-            printf("\n\tMasukkan Banyak Pesanan: ");
-            while((getchar())!='\n');
+        while (scanf("%d", &banyak_pesanan[i])==0 || banyak_pesanan[i] < 0 || banyak_pesanan[i] > stok_menu[pesanan[i]-1] || stok_menu[pesanan[i]-1] < 0){
+            if(banyak_pesanan[i] > stok_menu[pesanan[i]-1] || stok_menu[pesanan[i]-1] < 0){
+                printf("\t--------------------------------------------------------------");
+                printf("\n\tMohon Maaf Saat Ini Menu Tidak Tersedia!");
+                printf("\n\tSilakan Pilih Menu yang Lainnya.");
+                printf("\n\t--------------------------------------------------------------");
+                goto mengulang;
+            }else{
+                printf("\t--------------------------------------------------------------");
+                printf("\n\tKarakter yang Anda inputkan salah!");
+                printf("\n\tMohon inputkan angka yang benar.");
+                printf("\n\t--------------------------------------------------------------");
+                printf("\n\tMasukkan Banyak Pesanan: ");
+                while((getchar())!='\n');
+            }
         }
 
         sub_total[i] = array_harga_menu[pesanan[i]-1] * banyak_pesanan[i];
         total_biaya = total_biaya + sub_total[i];
+
+        update_stok_menu(pesanan[i], banyak_pesanan[i]);
 
         printf("\n\tPesanan Anda ke-%d : %s", i+1, array_nama_menu[pesanan[i]-1]);
         printf("\n\tHarga Menu        : Rp %d", array_harga_menu[pesanan[i]-1]);
@@ -707,12 +658,14 @@ void pemesanan(){
         printf("\n\tSub-total         : Rp %d", sub_total[i]);
 
         isi_cetak_bukti_pemesanan(pesanan[i], banyak_pesanan[i], sub_total[i], i);
+        isi_cetak_bukti_transaksi(pesanan[i], banyak_pesanan[i], sub_total[i], i);
+
 
         printf("\n\t--------------------------------------------------------------");
         printf("\n\tApakah Anda Ingin Memesan Kembali ?");
-        printf("\n\t [1] Pesan Lagi     [2] Lanjutkan Pembayaran");
+        printf("\n\t [1] Pesan Lagi    [2] Lanjutkan Pembayaran    [3] Lihat Menu");
         printf("\n\tMasukkan Pilihan Anda: ");
-        while (scanf("%d", &pilihan)==0 || pilihan < 1 || pilihan > 2){
+        while (scanf("%d", &pilihan)==0 || pilihan < 1 || pilihan > 3){
             printf("\t--------------------------------------------------------------");
             printf("\n\tKarakter yang Anda inputkan salah!");
             printf("\n\tMohon inputkan angka yang benar.");
@@ -724,23 +677,7 @@ void pemesanan(){
         i++;
 	}while(pilihan==1);
 
-    switch(pilihan){
-    case 2 :
-        printf("\n\t==============================================================");
-        printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
-        printf("\n\t||``````````````````````````````````````````````````````````||");
-        printf("\n\t||                        PEMBAYARAN                        ||");
-        printf("\n\t==============================================================");
-        waktu_pemesanan();
-        printf("\n\tNama Pelanggan    : %s", pelanggan_login.nama_pelanggan);
-        printf("\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
-        printf("\n\t--------------------------------------------------------------");
-        for(int j = 0; j < i; j++){
-            printf("\n\tPesanan Anda ke-%d : %s", j+1, array_nama_menu[pesanan[j]-1]);
-            printf("\n\tHarga Menu        : Rp %d", array_harga_menu[pesanan[j]-1]);
-            printf("\n\tBanyak Pesanan    : %d", banyak_pesanan[j]);
-            printf("\n\t--------------------------------------------------------------");
-        }
+    if(pilihan==2){
         if(total_biaya > 500000){
             diskon = besar_diskon[0] * total_biaya;
         }else if(total_biaya > 400000){
@@ -751,38 +688,46 @@ void pemesanan(){
             diskon = 0;
         }
         total_bayar = total_biaya - diskon;
-        printf("\n\tTotal Biaya       : Rp %d", total_biaya);
-        printf("\n\tPotongan Harga    : Rp %d", diskon);
-        printf("\n\t--------------------------------------------------------------");
-        printf("\n\tTotal Bayar       : Rp %d", total_bayar);
+        closing_cetak_bukti_pemesanan(total_biaya, diskon, total_bayar);
+        closing_cetak_bukti_transaksi(total_biaya, diskon, total_bayar);
+
+        char buff[255];
+        FILE *fptr;
+        if ((fptr = fopen("DataPesanan.txt","r")) == NULL){
+            printf("\n\tError: File tidak ada!");
+        }
+        while(fgets(buff, sizeof(buff), fptr)){
+            printf("%s", buff);
+        }
+        fclose(fptr);
+
         printf("\n\t==============================================================");
         printf("\n\t                STRUK PEMBAYARAN TELAH DICETAK                ");
         printf("\n\t==============================================================");
-        closing_cetak_bukti_pemesanan(total_biaya, diskon, total_bayar);
         ulang();
-        break;
+    }else if(pilihan == 3){
+        menu_utama();
     }
 }
 
-void cetak_nama(){
-	FILE *hasil;
-	hasil = fopen("DataPesanan.txt", "a");
-	fprintf(hasil, "\n\tNama Pelanggan    : %s", pelanggan_login.nama_pelanggan);
-	fprintf(hasil, "\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
-	fprintf(hasil, "\n\t--------------------------------------------------------------");
-	fclose(hasil);
-}
-
 void header_cetak_bukti_pemesanan(){
-    FILE *insert = fopen("DataPesanan.txt", "a");
+    FILE *insert = fopen("DataPesanan.txt", "w");
 	fprintf(insert,"\n\t==============================================================");
 	fprintf(insert,"\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
 	fprintf(insert,"\n\t||``````````````````````````````````````````````````````````||");
 	fprintf(insert,"\n\t||                      BUKTI PEMESANAN                     ||");
 	fprintf(insert,"\n\t==============================================================");
+	fprintf(insert,"\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
+	fprintf(insert,"\n\t--------------------------------------------------------------");
 	fclose(insert);
-	waktu_pembayaran();
-	cetak_nama();
+	waktu_pembayaran_pemesanan();
+}
+
+void isi_cetak_jenis_menu(int jenis_menu){
+    FILE *insert = fopen("DataPesanan.txt", "a");
+    fprintf(insert,"\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
+    fprintf(insert,"\n\t==============================================================");
+    fclose(insert);
 }
 
 void isi_cetak_bukti_pemesanan(int pesanan, int banyak_pesanan, int sub_total, int i){
@@ -805,6 +750,46 @@ void closing_cetak_bukti_pemesanan(int total_biaya, int diskon, int total_bayar)
 	fclose(insert);
 }
 
+void header_cetak_bukti_transaksi(){
+    FILE *insert = fopen("DataTransaksi.txt", "a");
+	fprintf(insert,"\n\t==============================================================");
+	fprintf(insert,"\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
+	fprintf(insert,"\n\t||``````````````````````````````````````````````````````````||");
+	fprintf(insert,"\n\t||                      BUKTI TRANSAKSI                     ||");
+	fprintf(insert,"\n\t==============================================================");
+	fprintf(insert,"\n\tNama Pegawai      : %s", pegawai_yang_bertugas.nama_pegawai);
+	fprintf(insert,"\n\t==============================================================");
+	fclose(insert);
+	waktu_pembayaran_transaksi();
+}
+
+void isi_cetak_jenis_menu_transaksi(int jenis_menu){
+    FILE *insert = fopen("DataTransaksi.txt", "a");
+    fprintf(insert,"\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
+    fprintf(insert,"\n\t==============================================================");
+    fclose(insert);
+}
+
+void isi_cetak_bukti_transaksi(int pesanan, int banyak_pesanan, int sub_total, int i){
+    FILE *insert = fopen("DataTransaksi.txt", "a");
+    fprintf(insert,"\n\tPesanan Anda ke-%d : %s", i+1, array_nama_menu[pesanan-1]);
+    fprintf(insert,"\n\tHarga Menu        : Rp %d", array_harga_menu[pesanan-1]);
+    fprintf(insert,"\n\tBanyak Pesanan    : %d", banyak_pesanan);
+    fprintf(insert,"\n\tSub-total         : %d", sub_total);
+    fprintf(insert,"\n\t--------------------------------------------------------------");
+    fclose(insert);
+}
+
+void closing_cetak_bukti_transaksi(int total_biaya, int diskon, int total_bayar){
+    FILE *insert = fopen("DataTransaksi.txt", "a");
+	fprintf(insert,"\n\tTotal Biaya       : Rp %d", total_biaya);
+	fprintf(insert,"\n\tPotongan Harga    : Rp %d", diskon);
+	fprintf(insert,"\n\t--------------------------------------------------------------");
+	fprintf(insert,"\n\tTotal Bayar       : Rp %d", total_bayar);
+	fprintf(insert,"\n\t==============================================================");
+	fclose(insert);
+}
+
 void ulang(){
     int menu;
     close();
@@ -814,8 +799,8 @@ void ulang(){
     printf("\n\t||``````````````````````````````````````````````````````````||");
     printf("\n\t||                           MENU                           ||");
     printf("\n\t||==========================================================||");
-    printf("\n\t|| Apakah Anda Ingin Memesan Kembali ?                      ||");
-    printf("\n\t||  [1] Pesan Lagi                                          ||");
+    printf("\n\t|| Apakah Anda Ingin Mengulang Program?                     ||");
+    printf("\n\t||  [1] Ulangi Program                                      ||");
     printf("\n\t||  [0] Keluar Program                                      ||");
     printf("\n\t==============================================================");
     printf("\n\tMasukkan Pilihan Anda : ");
@@ -829,8 +814,13 @@ void ulang(){
     }
 	close();
 	switch(menu){
-case 1 :
-        menu_cafe();
+    case 1 :
+        i = 0;
+        total_biaya = 0;
+		total_bayar = 0;
+        header_cetak_bukti_pemesanan();
+        header_cetak_bukti_transaksi();
+        menu_utama();
         break;
     case 0 :
         selesai();
@@ -842,7 +832,7 @@ void selesai(){
     printf("\n\t==============================================================");
 	printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
 	printf("\n\t||``````````````````````````````````````````````````````````||");
-	printf("\n\t||                TERIMAKASIH TELAH BERKUNJUNG              ||");
+	printf("\n\t||        TERIMA KASIH TELAH MENGGUNAKAN PROGRAM INI        ||");
 	printf("\n\t==============================================================");
 	exit(0);
 }
