@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -134,17 +133,20 @@ void opening(){
     close();
 }
 
+// fungsi pertama yang dijalankan pada program
 void main(){
     opening();
     login_pegawai();
 }
 
+// fungsi yang digunakan untuk mencetak local time saat dilakukan pemesanan
 void waktu_pemesanan(){
 	time(&waktuserver);
 	struct tm* waktu = localtime(&waktuserver);
 	printf ("\n\tWaktu Server      : %s", asctime (waktu));
 }
 
+// fungsi yang digunakan untuk mencetak local time saat dilakukan pembayaran pesanan yang dicetak pada file txt
 void waktu_pembayaran_pemesanan(){
 	time(&waktuserver);
 	struct tm* waktu = localtime(&waktuserver);
@@ -154,6 +156,7 @@ void waktu_pembayaran_pemesanan(){
 	fclose(hasil);
 }
 
+// fungsi yang digunakan untuk mencetak local time saat dilakukan transaksi pesanan yang dicetak pada file txt
 void waktu_pembayaran_transaksi(){
 	time(&waktuserver);
 	struct tm* waktu = localtime(&waktuserver);
@@ -163,6 +166,7 @@ void waktu_pembayaran_transaksi(){
 	fclose(hasil);
 }
 
+// fungsi yang digunakan untuk membaca stok menu pada file txt
 void baca_stok_menu(){
 	FILE *update = fopen("DataStokMenu.txt", "r");
 	for(int i = 0; i < 78; i++){
@@ -172,6 +176,7 @@ void baca_stok_menu(){
 	fclose(update);
 }
 
+// fungsi yang digunakan untuk mengupdate stok menu pada file txt
 void update_stok_menu(int pesanan, int banyak_pesanan){
     stok_menu[pesanan-1] = stok_menu[pesanan-1] - banyak_pesanan;
     FILE *update = fopen("DataStokMenu.txt", "w");
@@ -181,6 +186,8 @@ void update_stok_menu(int pesanan, int banyak_pesanan){
 	fclose(update);
 }
 
+// fungsi yang dipanggil pada setiap tampilan program, fungsi ini mencetak instruksi pengguna berupa arahan
+// untuk melanjutkan program
 void close(){
     fflush(stdin);
     printf("\n\tBerikutnya...");
@@ -189,6 +196,7 @@ void close(){
     system("cls");
 }
 
+// fungsi untuk login pegawai
 void login_pegawai(){
 	int pin;
 	printf("\n\t==============================================================");
@@ -197,6 +205,7 @@ void login_pegawai(){
 	printf("\n\t||                      MENU PEGAWAI                        ||");
 	printf("\n\t||              SILAKAN LOGIN TERLEBIH DAHULU               ||");
 	printf("\n\t==============================================================");
+	fflush(stdin);
 	printf("\n\tMasukkan Kode Pegawai : ");
 	while(scanf("%d", &pin)==0){
         printf("\t--------------------------------------------------------------");
@@ -206,7 +215,6 @@ void login_pegawai(){
         printf("\n\tMasukkan Kode Pegawai : ");
         while((getchar())!='\n');
     }
-	fflush(stdin);
 	if(pin == pegawai01.pin_pegawai){
 		printf("\n\tNama Pegawai          : %s", pegawai01.nama_pegawai);
 		printf("\n\t==============================================================");
@@ -236,6 +244,7 @@ void login_pegawai(){
 	}
 }
 
+// fungsi yang akan ditampilkan setelah pegawai dinyatakan telah berhasil login
 void menu_pegawai(){
     int menu;
     fflush(stdin);
@@ -275,6 +284,7 @@ void menu_pegawai(){
     }
 }
 
+// fungsi yang digunakan untuk menampilkan data transaksi yang ada pada file txt
 void data_transaksi(){
     char buff[255];
     FILE *fptr;
@@ -296,6 +306,7 @@ void data_transaksi(){
     menu_pegawai();
 }
 
+// revisi penambahan kode menu untuk mengetahui banyak menu yang ada
 void input_stok_menu(){
     FILE *input = fopen("DataStokMenu.txt", "w");
     printf("\n\t==============================================================");
@@ -304,7 +315,8 @@ void input_stok_menu(){
 	printf("\n\t||                      INPUT STOK MENU                     ||");
 	printf("\n\t==============================================================");
     for(int i = 0; i < 78; i++){
-        printf("\n\tMenu : %s", array_nama_menu[i]);
+        printf("\n\tKode Menu : %d", i+1);
+        printf("\n\tMenu      : %s", array_nama_menu[i]);
         printf("\n\tInput Jumlah Stok : ");
         while(scanf("%d", &stok_menu[i])==0 || stok_menu[i] < 0){
             printf("\t--------------------------------------------------------------");
@@ -315,13 +327,14 @@ void input_stok_menu(){
             while((getchar())!='\n');
         }
         fprintf(input, "%d#%d\n", i+1, stok_menu[i]);
-        printf("\n\t--------------------------------------------------------------");
+        printf("\t--------------------------------------------------------------");
     }
     fclose(input);
     close();
     menu_pegawai();
 }
 
+// revisi penambahan kode menu untuk mengetahui banyak menu yang ada
 void lihat_stok_menu(){
     int index_menu, stok;
     FILE *file = fopen("DataStokMenu.txt", "r");
@@ -334,6 +347,7 @@ void lihat_stok_menu(){
     for(int i = 0; i < 78; i++){
         fscanf(file, "%d#%d\n", &index_menu, &stok);
         fflush(stdin);
+        printf("\n\tKode Menu : %d", i+1);
         printf("\n\tNama Menu : %s", array_nama_menu[index_menu]);
         printf("\n\tStok      : %d", stok);
         printf("\n\t--------------------------------------------------------------");
@@ -343,6 +357,7 @@ void lihat_stok_menu(){
     menu_pegawai();
 }
 
+// menu utama program yang berisi pilihan jenis menu
 void menu_utama(){
     int menu;
     printf("\n\t==============================================================");
@@ -378,6 +393,7 @@ void menu_utama(){
 	}
 }
 
+// fungsi yang berisi jenis-jenis minuman yang ada pada program coffee shop
 void menu_minuman(){
     int minuman;
     printf("\n\t==============================================================");
@@ -576,6 +592,7 @@ void menu_paket(){
     opsi_program(54, 78, 5);
 }
 
+// fungsi yang dipanggil setelah menu minuman, dessert, ataupun paket ditampilkan
 void opsi_program(int batas_bawah, int batas_atas, int jenis_menu){
     int pilihan;
     printf("\n\t==============================================================");
@@ -605,6 +622,7 @@ void opsi_program(int batas_bawah, int batas_atas, int jenis_menu){
 	}
 }
 
+// fungsi yang dijalankan saat melakukan pemesanan
 void pemesanan(int batas_bawah, int batas_atas, int jenis_menu){
     printf("\n\t==============================================================");
     printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
@@ -710,6 +728,7 @@ void pemesanan(int batas_bawah, int batas_atas, int jenis_menu){
     }
 }
 
+// fungsi yang digunakan untuk mencetak header bukti pemesanan pada file txt
 void header_cetak_bukti_pemesanan(){
     FILE *insert = fopen("DataPesanan.txt", "w");
 	fprintf(insert,"\n\t==============================================================");
@@ -723,6 +742,7 @@ void header_cetak_bukti_pemesanan(){
 	waktu_pembayaran_pemesanan();
 }
 
+// fungsi yang digunakan untuk mencetak jenis menu pada file txt
 void isi_cetak_jenis_menu(int jenis_menu){
     FILE *insert = fopen("DataPesanan.txt", "a");
     fprintf(insert,"\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
@@ -730,6 +750,7 @@ void isi_cetak_jenis_menu(int jenis_menu){
     fclose(insert);
 }
 
+// fungsi yang digunakan untuk mencetak isi bukti pemesanan pada file txt
 void isi_cetak_bukti_pemesanan(int pesanan, int banyak_pesanan, int sub_total, int i){
     FILE *insert = fopen("DataPesanan.txt", "a");
     fprintf(insert,"\n\tPesanan Anda ke-%d : %s", i+1, array_nama_menu[pesanan-1]);
@@ -740,6 +761,7 @@ void isi_cetak_bukti_pemesanan(int pesanan, int banyak_pesanan, int sub_total, i
     fclose(insert);
 }
 
+// fungsi yang digunakan untuk mencetak total biaya, potongan harga, dan total harga pada bukti pemesanan di file txt
 void closing_cetak_bukti_pemesanan(int total_biaya, int diskon, int total_bayar){
     FILE *insert = fopen("DataPesanan.txt", "a");
 	fprintf(insert,"\n\tTotal Biaya       : Rp %d", total_biaya);
@@ -749,7 +771,7 @@ void closing_cetak_bukti_pemesanan(int total_biaya, int diskon, int total_bayar)
 	fprintf(insert,"\n\t==============================================================");
 	fclose(insert);
 }
-
+// fungsi yang digunakan untuk mencetak header bukti transaksi pada file txt
 void header_cetak_bukti_transaksi(){
     FILE *insert = fopen("DataTransaksi.txt", "a");
 	fprintf(insert,"\n\t==============================================================");
@@ -763,6 +785,7 @@ void header_cetak_bukti_transaksi(){
 	waktu_pembayaran_transaksi();
 }
 
+// fungsi yang digunakan untuk mencetak jenis menu pada bukti transaksi di file txt
 void isi_cetak_jenis_menu_transaksi(int jenis_menu){
     FILE *insert = fopen("DataTransaksi.txt", "a");
     fprintf(insert,"\n\tJenis Menu        : %s", array_jenis_menu[jenis_menu]);
@@ -770,6 +793,7 @@ void isi_cetak_jenis_menu_transaksi(int jenis_menu){
     fclose(insert);
 }
 
+// fungsi yang digunakan untuk mencetak isi bukti transaksi pada file txt
 void isi_cetak_bukti_transaksi(int pesanan, int banyak_pesanan, int sub_total, int i){
     FILE *insert = fopen("DataTransaksi.txt", "a");
     fprintf(insert,"\n\tPesanan Anda ke-%d : %s", i+1, array_nama_menu[pesanan-1]);
@@ -780,6 +804,7 @@ void isi_cetak_bukti_transaksi(int pesanan, int banyak_pesanan, int sub_total, i
     fclose(insert);
 }
 
+// fungsi yang digunakan untuk mencetak total biaya, potongan harga, dan total harga pada bukti transaksi di file txt
 void closing_cetak_bukti_transaksi(int total_biaya, int diskon, int total_bayar){
     FILE *insert = fopen("DataTransaksi.txt", "a");
 	fprintf(insert,"\n\tTotal Biaya       : Rp %d", total_biaya);
@@ -790,6 +815,7 @@ void closing_cetak_bukti_transaksi(int total_biaya, int diskon, int total_bayar)
 	fclose(insert);
 }
 
+// fungsi yang dijalankan untuk menampilkan opsi mengulang program
 void ulang(){
     int menu;
     close();
@@ -828,6 +854,7 @@ void ulang(){
     }
 }
 
+// fungsi yang dijalankan ketika user memilih untuk keluar program
 void selesai(){
     printf("\n\t==============================================================");
 	printf("\n\t||         C U P  O'  J A N E  C O F F E E  S H O P         ||");
